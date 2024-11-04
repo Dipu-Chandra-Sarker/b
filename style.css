@@ -1,0 +1,845 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #fff5e6;
+    font-size: 14px;
+}
+
+.container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.title-bar {
+    background-color: #f59a2e;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.title-bar h1 {
+    margin: 0;
+    font-size: 1.2em;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+h2 {
+    text-align: center;
+    color: #f59a2e;
+    font-size: 1.3em;
+    margin-bottom: 20px;
+}
+
+h3 {
+    font-size: 1.2em;
+    color: #e58a1e;
+    margin-top: 20px;
+}
+
+.menu-button {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 10px;
+    background-color: #f59a2e;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.menu-button:hover {
+    background-color: #e58a1e;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+}
+
+.menu-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.back-button {
+    background-color: #666;
+    margin-top: 15px;
+}
+
+.back-button:hover {
+    background-color: #555;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    background-color: white;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.edit-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.edit-field {
+    flex: 1;
+}
+
+.edit-field label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #444;
+    font-size: 0.9em;
+}
+
+.edit-field input,
+.edit-field select {
+    width: 100%;
+    height: 36px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 0.9em;
+    transition: border-color 0.3s ease;
+    background-color: white;
+}
+
+.academic-info {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    align-items: flex-start;
+}
+
+.academic-info > div {
+    flex: 1;
+    width: 100%;
+}
+
+#academic-year,
+#semester {
+    width: 100%;
+    height: 36px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 0.9em;
+    transition: border-color 0.3s ease;
+    background-color: white;
+}
+
+#academic-year:focus,
+#semester:focus {
+    border-color: #f59a2e;
+    outline: none;
+    box-shadow: 0 0 5px rgba(245, 154, 46, 0.3);
+}
+
+#semester {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 1em;
+    padding-right: 30px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    font-size: 0.9em;
+    color: #444;
+}
+
+input[type="number"],
+input[type="text"],
+input[type="file"],
+select {
+    width: 100%;
+    height: 36px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 0.9em;
+    transition: border-color 0.3s ease;
+    background-color: white;
+}
+/* Style for all placeholders */
+::-webkit-input-placeholder { /* Chrome/Safari/Opera */
+    color: rgba(0, 0, 0, 0.3) !important;
+    font-size: 0.85em !important;  /* Increased from 0.75em */
+}
+
+:-moz-placeholder { /* Firefox 18- */
+    color: rgba(0, 0, 0, 0.3) !important;
+    font-size: 0.85em !important;  /* Increased from 0.75em */
+}
+
+::-moz-placeholder { /* Firefox 19+ */
+    color: rgba(0, 0, 0, 0.3) !important;
+    font-size: 0.85em !important;  /* Increased from 0.75em */
+}
+
+:-ms-input-placeholder { /* IE/Edge */
+    color: rgba(0, 0, 0, 0.3) !important;
+    font-size: 0.85em !important;  /* Increased from 0.75em */
+}
+
+::placeholder { /* Modern browsers */
+    color: rgba(0, 0, 0, 0.3) !important;
+    font-size: 0.85em !important;  /* Increased from 0.75em */
+}
+
+@media (min-width: 768px) {
+    ::-webkit-input-placeholder,
+    :-moz-placeholder,
+    ::-moz-placeholder,
+    :-ms-input-placeholder,
+    ::placeholder {
+        font-size: 0.92em !important;  /* Increased from 0.85em */
+    }
+}
+
+input[type="number"]:focus,
+input[type="text"]:focus,
+input[type="file"]:focus,
+select:focus {
+    border-color: #f59a2e;
+    outline: none;
+    box-shadow: 0 0 5px rgba(245, 154, 46, 0.3);
+}
+
+
+/*/* Add these styles to your existing CSS file */
+
+.course-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    background-color: white;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    align-items: center;
+}
+
+.course-row .edit-field {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+}
+
+.icon-button {
+    background: none;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    color: #666;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    min-width: 36px;
+}
+
+.icon-button:hover {
+    background-color: #fee3c6;
+    color: #f59a2e;
+}
+
+.icon-button:active {
+    transform: scale(0.95);
+}
+
+#edit-form .course-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+#edit-form .course-row select {
+    flex: 1;
+    min-width: 0;
+    margin-bottom: 0;
+}
+
+.course-row .menu-button {
+    flex: 0 0 auto;
+    width: auto;
+    white-space: nowrap;
+    padding: 8px 15px;
+    margin-bottom: 0;
+}
+
+.hidden {
+    display: none;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 0.9em;
+    background-color: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 12px 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f59a2e;
+    color: white;
+    font-weight: bold;
+}
+
+tr:nth-child(even) {
+    background-color: #fff9f0;
+}
+
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    gap: 10px;
+}
+
+.button-group .menu-button {
+    width: 48%;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 90%;
+    max-width: 90%;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+}
+
+#pdf-preview {
+    width: 100%;
+    height: 60vh;
+    border: none;
+    overflow: auto;
+    margin-top: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.exit-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #f59a2e;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    font-size: 1em;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.exit-button:hover {
+    background-color: #e58a1e;
+    transform: scale(1.1);
+}
+
+/* Find your existing splash screen styles in style.css and update/add these styles */
+
+.splash-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(245, 154, 46, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    backdrop-filter: blur(5px);
+}
+
+.splash-content {
+    background-color: white;
+    padding: 25px;
+    border-radius: 10px;
+    text-align: center;
+    width: 80%;
+    max-width: 400px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.splash-buttons {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+    gap: 10px;
+}
+
+.splash-buttons .menu-button {
+    width: 45%;
+}
+
+/* Add these new styles right after the above splash screen styles */
+.splash-content.calculation-result h3 {
+    font-size: 1.2em;
+    margin-bottom: 15px;
+    color: #e58a1e;
+}
+
+.splash-content.calculation-result .edit-field p {
+    font-size: 0.9em;
+    margin: 5px 0;
+    line-height: 1.4;
+}
+
+.splash-content.calculation-result .edit-field p strong {
+    font-weight: 600;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+/* Update your existing media queries section */
+@media (max-width: 767px) {
+    /* Keep your existing mobile styles */
+    .splash-screen .splash-content h3 {
+        font-size: 1.1em;
+        margin-bottom: 15px;
+        color: #e58a1e;
+    }
+
+    .splash-screen .splash-content .edit-row {
+        margin-bottom: 12px;
+    }
+
+    .splash-screen .splash-content .edit-field p {
+        font-size: 0.9em;
+        margin: 5px 0;
+        line-height: 1.4;
+    }
+
+    .splash-screen .splash-content .edit-field p strong {
+        font-weight: 600;
+        display: inline-block;
+        margin-right: 5px;
+    }
+
+    /* Add these new mobile styles */
+    .splash-content.calculation-result h3 {
+        font-size: 1.1em;
+        margin-bottom: 15px;
+    }
+
+    .splash-content.calculation-result .edit-field p {
+        font-size: 0.9em;
+        margin: 5px 0;
+        line-height: 1.4;
+    }
+}
+
+@media (min-width: 768px) {
+    /* Keep your existing desktop styles */
+    .splash-screen .splash-content h3 {
+        font-size: 1.2em;
+    }
+
+    .splash-screen .splash-content .edit-field p {
+        font-size: 1em;
+    }
+
+    .splash-content {
+        padding: 30px;
+        max-width: 500px;
+    }
+
+    /* Add these new desktop styles */
+    .splash-content.calculation-result h3 {
+        font-size: 1.2em;
+    }
+
+    .splash-content.calculation-result .edit-field p {
+        font-size: 1em;
+    }
+}
+
+.version-info {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #fff9f0;
+    border-radius: 5px;
+}
+
+.toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 3000;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translate(-50%, 100%);
+        opacity: 0;
+    }
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+
+.error-message {
+    color: #ff6b6b;
+    font-size: 0.9em;
+    margin-top: 5px;
+    display: none;
+}
+
+.error .error-message {
+    display: block;
+}
+
+input:invalid,
+select:invalid {
+    border-color: #ff6b6b;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading::after {
+    content: "";
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #f59a2e;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+/* Update your existing media query */
+@media (max-width: 767px) {
+    .course-row {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+
+    .course-row select {
+        width: 22%;
+        flex: 0 0 22%;
+        margin-bottom: 0;
+    }
+
+  /* Update/Add these icon-button styles within the mobile media query */
+    .icon-button {
+        padding: 0;  /* Remove padding */
+        min-width: 36px;  /* Match height */
+        height: 36px;    /* Match select box height */
+    }
+    
+    .icon-button svg {
+        width: 20px;     /* Adjusted for better proportion */
+        height: 20px;
+    }
+    .course-row .icon-button {
+        margin-left: auto;
+    }
+
+    /* New PDF preview styles for mobile */
+    .modal-content {
+        margin: 10% auto;
+        padding: 15px;
+        width: 95%;
+        max-width: 95%;
+    }
+
+    #pdf-preview {
+        height: 70vh;
+    }
+
+    #pdf-canvas {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+@media (min-width: 768px) {
+    body {
+        font-size: 16px;
+    }
+
+    .container {
+        max-width: 750px;
+        padding: 20px;
+    }
+
+    .course-row {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .course-row select {
+        flex: 1;
+        min-width: 0;
+    }
+
+    #edit-form .course-row select {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .title-bar h1 {
+        font-size: 1.6em;
+    }
+
+    .form-group {
+        padding: 20px;
+    }
+
+    .button-group {
+        margin: 20px 0;
+    }
+
+    .splash-content {
+        padding: 30px;
+        max-width: 500px;
+    }
+
+    .exit-button {
+        width: 70px;
+        height: 70px;
+        font-size: 1.2em;
+    }
+
+    .edit-row {
+        gap: 20px;
+    }
+
+    .edit-field input,
+    .edit-field select {
+        padding: 10px;
+    }
+
+    /* Updated PDF preview styles for desktop - wider */
+    .modal-content {
+        max-width: 850px;  /* Increased from 700px to 850px for more width */
+        margin: 5% auto;   
+    }
+
+    #pdf-preview {
+        height: 400px;     /* Keeping the same height */
+    }
+}
+@media print {
+    body {
+        background-color: white;
+    }
+
+    .container {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .menu-button,
+    .back-button,
+    .exit-button {
+        display: none;
+    }
+
+    table {
+        page-break-inside: avoid;
+    }
+
+    .title-bar {
+        background-color: white;
+        color: black;
+        box-shadow: none;
+    }
+
+    .form-group,
+    .course-row {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+}
+
+.menu-button:focus,
+input:focus,
+select:focus {
+    outline: 2px solid #f59a2e;
+    outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #f59a2e;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #e58a1e;
+}
+
+.menu-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.success {
+    border-color: #2ecc71 !important;
+}
+
+.success-message {
+    color: #2ecc71;
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+.old-grade.hidden {
+    display: none;
+}
+
+.menu-button:focus,
+select:focus,
+input:focus {
+    outline: 2px solid #f59a2e;
+    outline-offset: 2px;
+    box-shadow: 0 0 5px rgba(245, 154, 46, 0.3);
+}
+
+/* Add these new styles at the end of your existing CSS file */
+
+.edit-field {
+    transition: all 0.3s ease;
+}
+
+.unpaired {
+    border-color: #ff9800;
+    box-shadow: 0 0 0 1px #ff9800;
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.course-row select {
+    transition: all 0.3s ease;
+}
+
+.course-row select:not(.hidden) {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.course-row select.hidden {
+    opacity: 0;
+    transform: translateX(-10px);
+    pointer-events: none;
+}
+
+.edit-field:focus {
+    border-color: #f59a2e;
+    box-shadow: 0 0 0 2px rgba(245, 154, 46, 0.2);
+    outline: none;
+}
+
+.edit-field.success {
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 1px #4CAF50;
+}
