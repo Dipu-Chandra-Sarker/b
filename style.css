@@ -592,25 +592,12 @@ select:invalid {
 /* Update your existing media query */
 @media (max-width: 767px) {
   /* Add these new styles right here */
-    #loaded-record h3 {
+     #loaded-record p {
         font-size: 0.9em;
     }
 
-    #loaded-record p {
-        font-size: 0.8em;
-    }
-
-    #loaded-record table {
-        font-size: 0.8em;
-    }
-
-    #loaded-record .record-table th,
-    #loaded-record .record-table td {
-        font-size: 0.8em;
-    }
-
     #loaded-record .note {
-        font-size: 0.75em;
+        font-size: 0.7em;
     }
     .course-row {
         flex-direction: row;
