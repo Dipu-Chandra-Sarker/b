@@ -191,14 +191,18 @@ function calculateCGPA() {
 
     setTimeout(() => {
         let newPoints = 0;
-        let newAttemptedCredits = 0;
-        let newEarnedCredits = 0;
         let semesterPoints = 0;
         let semesterAttemptedCredits = 0;
         let semesterEarnedCredits = 0;
+        let totalAttemptedCredits = 0;
+        let totalEarnedCredits = 0;
 
         const parsedCompletedCredits = parseFloat(completedCredits) || 0;
         const parsedCurrentCGPA = parseFloat(currentCGPA) || 0;
+
+        // Set initial totals from previous record
+        totalAttemptedCredits = parsedCompletedCredits;
+        totalEarnedCredits = parsedCompletedCredits;
 
         courses.forEach(course => {
             const credits = parseFloat(course.children[0].value);
@@ -214,34 +218,37 @@ function calculateCGPA() {
             }
 
             if (isRetake && (parsedCompletedCredits > 0 || parsedCurrentCGPA > 0)) {
-                // For retakes, we only add the grade point difference
+                // For retake courses
+                // Calculate grade point difference for GPA
                 newPoints += (gradePoints - oldGradePoints) * credits;
-                // Credits only count if new grade is not F
-                if (gradePoints > 0) {
-                    newEarnedCredits += credits;
+                
+                // Update earned credits if passing previously failed course
+                if (oldGradePoints === 0 && gradePoints > 0) {
+                    // If old grade was F and new grade is passing
+                    totalEarnedCredits += credits;
                 }
+                // Attempted credits don't change for retakes
             } else {
+                // For new courses
                 newPoints += gradePoints * credits;
-                newAttemptedCredits += credits;
-                if (gradePoints > 0) {
-                    newEarnedCredits += credits;
+                totalAttemptedCredits += credits;  // Add to attempted
+                if (gradePoints > 0) {  // If passing grade
+                    totalEarnedCredits += credits;  // Add to earned
                 }
             }
         });
 
+        // Calculate total points including previous CGPA
         const totalPoints = (parsedCurrentCGPA * parsedCompletedCredits) + newPoints;
-        const totalAttemptedCredits = parsedCompletedCredits + newAttemptedCredits;
-        const totalEarnedCredits = parsedCompletedCredits + newEarnedCredits;
         
-        // Calculate CGPA using attempted credits for the division
+        // Calculate final GPAs
         const newCGPA = totalAttemptedCredits > 0 ? totalPoints / totalAttemptedCredits : 0;
-        // Calculate semester GPA using attempted credits
         const semesterGPA = semesterAttemptedCredits > 0 ? semesterPoints / semesterAttemptedCredits : 0;
 
         // Remove splash screen
         document.body.removeChild(splashScreen);
 
-        // Show results with both attempted and earned credits
+        // Show results with all calculated values
         showCalculationResult(
             academicYear, 
             semester || 'Not Selected', 
@@ -252,9 +259,7 @@ function calculateCGPA() {
             semesterAttemptedCredits,
             semesterEarnedCredits,
             totalAttemptedCredits,
-            totalEarnedCredits,
-            newAttemptedCredits,
-            newEarnedCredits
+            totalEarnedCredits
         );
     }, 1000);
 }
@@ -282,20 +287,18 @@ function showCalculationResult(
                 <h3>GPA Calculation Result</h3>
                 
                 <div class="edit-row">
-                    <div class="edit-field">
-                        <p>Academic Year: ${academicYear}</p>
-                        <p>Semester: ${semester}</p>
+                    <div class="edit-field text-left">
+                        <p><span class="result-label">Academic Year:</span> ${academicYear}</p>
+                        <p><span class="result-label">Semester:</span> ${semester}</p>
                     </div>
                 </div>
 
                 <h3>Semester Result</h3>
                 <div class="edit-row">
-                    <div class="edit-field">
-                        <p>Attempted Credits: ${Math.round(semesterAttemptedCredits)}</p>
-                        <p>Completed Credits: ${Math.round(semesterEarnedCredits)}</p>
-                    </div>
-                    <div class="edit-field">
-                        <p>Semester GPA: ${semesterGPA.toFixed(2)}</p>
+                    <div class="edit-field text-left">
+                        <p><span class="result-label">Attempted Credits:</span> ${Math.round(semesterAttemptedCredits)}</p>
+                        <p><span class="result-label">Completed Credits:</span> ${Math.round(semesterEarnedCredits)}</p>
+                        <p><span class="result-label">Semester GPA:</span> ${semesterGPA.toFixed(2)}</p>
                     </div>
                 </div>
 
@@ -312,37 +315,28 @@ function showCalculationResult(
                 <h3>CGPA Calculation Result</h3>
                 
                 <div class="edit-row">
-                    <div class="edit-field">
-                        <p>Academic Year: ${academicYear}</p>
-                        <p>Semester: ${semester}</p>
+                    <div class="edit-field text-left">
+                        <p><span class="result-label">Academic Year:</span> ${academicYear}</p>
+                        <p><span class="result-label">Semester:</span> ${semester}</p>
                     </div>
                 </div>
 
                 <div class="edit-row">
-                    <div class="edit-field">
-                        <p>Previous Credits: ${Math.round(completedCredits)}</p>
-                        <p>Previous CGPA: ${currentCGPA.toFixed(2)}</p>
-                    </div>
-                    <div class="edit-field">
-                        <p>Total Attempted Credits: ${Math.round(totalAttemptedCredits)}</p>
-                        <p>Total Completed Credits: ${Math.round(totalEarnedCredits)}</p>
-                    </div>
-                </div>
-
-                <div class="edit-row">
-                    <div class="edit-field">
-                        <p>New CGPA: ${newCGPA.toFixed(2)}</p>
+                    <div class="edit-field text-left">
+                        <p><span class="result-label">Previous Credits:</span> ${Math.round(completedCredits)}</p>
+                        <p><span class="result-label">Previous CGPA:</span> ${currentCGPA.toFixed(2)}</p>
+                        <p><span class="result-label">Total Attempted Credits:</span> ${Math.round(totalAttemptedCredits)}</p>
+                        <p><span class="result-label">Total Completed Credits:</span> ${Math.round(totalEarnedCredits)}</p>
+                        <p><span class="result-label">New CGPA:</span> ${newCGPA.toFixed(2)}</p>
                     </div>
                 </div>
 
                 <h3>Semester Result</h3>
                 <div class="edit-row">
-                    <div class="edit-field">
-                        <p>Attempted Credits: ${Math.round(semesterAttemptedCredits)}</p>
-                        <p>Completed Credits: ${Math.round(semesterEarnedCredits)}</p>
-                    </div>
-                    <div class="edit-field">
-                        <p>Semester GPA: ${semesterGPA.toFixed(2)}</p>
+                    <div class="edit-field text-left">
+                        <p><span class="result-label">Attempted Credits:</span> ${Math.round(semesterAttemptedCredits)}</p>
+                        <p><span class="result-label">Completed Credits:</span> ${Math.round(semesterEarnedCredits)}</p>
+                        <p><span class="result-label">Semester GPA:</span> ${semesterGPA.toFixed(2)}</p>
                     </div>
                 </div>
 
@@ -933,9 +927,10 @@ function updateNewCGPA() {
     const editForm = document.getElementById('edit-form');
     const completedCredits = parseFloat(document.getElementById('edit-completed-credits')?.value) || 0;
     const currentCGPA = parseFloat(document.getElementById('edit-current-gpa')?.value) || 0;
+    
     let totalPoints = completedCredits * currentCGPA;
-    let totalCredits = completedCredits;
-    let earnedCredits = completedCredits;
+    let totalAttemptedCredits = completedCredits;
+    let totalEarnedCredits = completedCredits;
     let semesterPoints = 0;
     let semesterAttemptedCredits = 0;
     let semesterEarnedCredits = 0;
@@ -944,42 +939,56 @@ function updateNewCGPA() {
         const credits = parseFloat(courseRow.children[0].value) || 0;
         const gradePoints = parseFloat(courseRow.children[1].value) || 0;
         
+        // Add to semester totals
+        semesterPoints += gradePoints * credits;
         semesterAttemptedCredits += credits;
-        if (gradePoints > 0) { // Not an F grade
+        if (gradePoints > 0) {
             semesterEarnedCredits += credits;
         }
 
         if (currentRecord.type === "CGPA" && courseRow.children[2] && courseRow.children[2].value === "1") {
+            // This is a retake course
             const oldGradePoints = parseFloat(courseRow.children[3].value) || 0;
+            
+            // Calculate points for CGPA
+            // Add the difference between new and old grade points
             totalPoints += (gradePoints - oldGradePoints) * credits;
-            if (gradePoints > 0) {
-                earnedCredits += credits;
+            
+            // Update earned credits if passing a previously failed course
+            if (oldGradePoints === 0 && gradePoints > 0) {
+                // If old grade was F and new grade is passing
+                totalEarnedCredits += credits;
             }
+            // Attempted credits don't change for retakes
         } else {
+            // This is a new course
             totalPoints += gradePoints * credits;
-            totalCredits += credits;
+            totalAttemptedCredits += credits;
             if (gradePoints > 0) {
-                earnedCredits += credits;
+                totalEarnedCredits += credits;
             }
         }
-
-        semesterPoints += gradePoints * credits;
     });
 
-    const newCGPA = totalCredits > 0 ? totalPoints / totalCredits : 0;
+    // Calculate semester GPA and CGPA
+    const newCGPA = totalAttemptedCredits > 0 ? totalPoints / totalAttemptedCredits : 0;
     const semesterGPA = semesterAttemptedCredits > 0 ? semesterPoints / semesterAttemptedCredits : 0;
     
-    // Set earned credits as the total credits value in the form
+    // Update form fields
     if (document.getElementById('edit-total-credits')) {
-        document.getElementById('edit-total-credits').value = earnedCredits.toFixed(2);
+        document.getElementById('edit-total-credits').value = totalEarnedCredits.toFixed(2);
     }
     if (document.getElementById('edit-new-gpa')) {
         document.getElementById('edit-new-gpa').value = newCGPA.toFixed(2);
     }
 
+    // Update current record with new calculations
     currentRecord.semesterAttemptedCredits = semesterAttemptedCredits;
     currentRecord.semesterEarnedCredits = semesterEarnedCredits;
     currentRecord.semesterGPA = parseFloat(semesterGPA.toFixed(2));
+    currentRecord.totalAttemptedCredits = totalAttemptedCredits;
+    currentRecord.totalEarnedCredits = totalEarnedCredits;
+    currentRecord.calculatedGPA = parseFloat(newCGPA.toFixed(2));
 }
 
 function validateEditForm() {
@@ -1025,20 +1034,18 @@ function showEditedResult() {
                 <h3>Updated GPA Calculation Result</h3>
                 
                 <div class="edit-row">
-                    <div class="edit-field">
-                        <p>Academic Year: ${currentRecord.academicYear}</p>
-                        <p>Semester: ${currentRecord.semester}</p>
+                    <div class="edit-field text-left">
+                        <p><span class="result-label">Academic Year:</span> ${currentRecord.academicYear}</p>
+                        <p><span class="result-label">Semester:</span> ${currentRecord.semester}</p>
                     </div>
                 </div>
 
                 <h3>Semester Result</h3>
                 <div class="edit-row">
-                    <div class="edit-field">
-                        <p>Attempted Credits: ${currentRecord.semesterAttemptedCredits}</p>
-                        <p>Completed Credits: ${currentRecord.semesterEarnedCredits}</p>
-                    </div>
-                    <div class="edit-field">
-                        <p>Semester GPA: ${currentRecord.semesterGPA.toFixed(2)}</p>
+                    <div class="edit-field text-left">
+                        <p><span class="result-label">Attempted Credits:</span> ${currentRecord.semesterAttemptedCredits}</p>
+                        <p><span class="result-label">Completed Credits:</span> ${currentRecord.semesterEarnedCredits}</p>
+                        <p><span class="result-label">Semester GPA:</span> ${currentRecord.semesterGPA.toFixed(2)}</p>
                     </div>
                 </div>
 
@@ -1055,37 +1062,28 @@ function showEditedResult() {
                 <h3>Updated CGPA Calculation Result</h3>
                 
                 <div class="edit-row">
-                    <div class="edit-field">
-                        <p>Academic Year: ${currentRecord.academicYear}</p>
-                        <p>Semester: ${currentRecord.semester}</p>
+                    <div class="edit-field text-left">
+                        <p><span class="result-label">Academic Year:</span> ${currentRecord.academicYear}</p>
+                        <p><span class="result-label">Semester:</span> ${currentRecord.semester}</p>
                     </div>
                 </div>
 
                 <div class="edit-row">
-                    <div class="edit-field">
-                        <p>Previous Credits: ${currentRecord.completedCredits}</p>
-                        <p>Previous CGPA: ${currentRecord.currentGPA}</p>
-                    </div>
-                    <div class="edit-field">
-                        <p>Total Attempted Credits: ${currentRecord.totalAttemptedCredits}</p>
-                        <p>Total Completed Credits: ${currentRecord.totalEarnedCredits}</p>
-                    </div>
-                </div>
-
-                <div class="edit-row">
-                    <div class="edit-field">
-                        <p>New CGPA: ${currentRecord.calculatedGPA.toFixed(2)}</p>
+                    <div class="edit-field text-left">
+                        <p><span class="result-label">Previous Credits:</span> ${currentRecord.completedCredits}</p>
+                        <p><span class="result-label">Previous CGPA:</span> ${currentRecord.currentGPA.toFixed(2)}</p>
+                        <p><span class="result-label">Total Attempted Credits:</span> ${currentRecord.totalAttemptedCredits}</p>
+                        <p><span class="result-label">Total Completed Credits:</span> ${currentRecord.totalEarnedCredits}</p>
+                        <p><span class="result-label">New CGPA:</span> ${currentRecord.calculatedGPA.toFixed(2)}</p>
                     </div>
                 </div>
 
                 <h3>Semester Result</h3>
                 <div class="edit-row">
-                    <div class="edit-field">
-                        <p>Attempted Credits: ${currentRecord.semesterAttemptedCredits}</p>
-                        <p>Completed Credits: ${currentRecord.semesterEarnedCredits}</p>
-                    </div>
-                    <div class="edit-field">
-                        <p>Semester GPA: ${currentRecord.semesterGPA.toFixed(2)}</p>
+                    <div class="edit-field text-left">
+                        <p><span class="result-label">Attempted Credits:</span> ${currentRecord.semesterAttemptedCredits}</p>
+                        <p><span class="result-label">Completed Credits:</span> ${currentRecord.semesterEarnedCredits}</p>
+                        <p><span class="result-label">Semester GPA:</span> ${currentRecord.semesterGPA.toFixed(2)}</p>
                     </div>
                 </div>
 
@@ -1159,20 +1157,26 @@ function saveEditedRecord() {
             const oldGrade = isRetake ? 
                             courseRow.children[3].options[courseRow.children[3].selectedIndex].text : '-';
 
-            // Update semester totals
+            // Add to semester totals
             semesterAttemptedCredits += credits;
-            if (gradePoints > 0) { // Not an F grade
+            if (gradePoints > 0) {
                 semesterEarnedCredits += credits;
             }
 
-            // Update CGPA totals
             if (currentRecord.type === "CGPA") {
                 if (isRetake) {
-                    newPoints += gradePoints * credits;
-                    if (gradePoints > 0) {
+                    // For retake courses
+                    const oldGradePoints = parseFloat(courseRow.children[3].value) || 0;
+                    // Add the difference between new and old grade points
+                    newPoints += (gradePoints - oldGradePoints) * credits;
+                    
+                    // Update earned credits if passing a previously failed course
+                    if (oldGradePoints === 0 && gradePoints > 0) {
                         totalEarnedCredits += credits;
                     }
+                    // Don't change attempted credits for retakes
                 } else {
+                    // For new courses
                     newPoints += gradePoints * credits;
                     totalAttemptedCredits += credits;
                     if (gradePoints > 0) {
@@ -1203,6 +1207,8 @@ function saveEditedRecord() {
             const totalPoints = (currentRecord.currentGPA * currentRecord.completedCredits) + newPoints;
             currentRecord.calculatedGPA = totalAttemptedCredits > 0 ? 
                 totalPoints / totalAttemptedCredits : 0;
+        } else {
+            currentRecord.calculatedGPA = currentRecord.semesterGPA;
         }
 
         showEditedResult();
