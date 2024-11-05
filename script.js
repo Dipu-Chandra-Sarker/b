@@ -974,12 +974,11 @@ function updateNewCGPA() {
     const newCGPA = totalAttemptedCredits > 0 ? totalPoints / totalAttemptedCredits : 0;
     const semesterGPA = semesterAttemptedCredits > 0 ? semesterPoints / semesterAttemptedCredits : 0;
     
-    // Update form fields
     if (document.getElementById('edit-total-credits')) {
-        document.getElementById('edit-total-credits').value = totalEarnedCredits.toFixed(2);
+        document.getElementById('edit-total-credits').value = Math.round(totalEarnedCredits);  // Changed from toFixed(2)
     }
     if (document.getElementById('edit-new-gpa')) {
-        document.getElementById('edit-new-gpa').value = newCGPA.toFixed(2);
+        document.getElementById('edit-new-gpa').value = newCGPA.toFixed(2);  // Keep CGPA with 2 decimal places
     }
 
     // Update current record with new calculations
