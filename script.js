@@ -974,6 +974,7 @@ function updateNewCGPA() {
     const newCGPA = totalAttemptedCredits > 0 ? totalPoints / totalAttemptedCredits : 0;
     const semesterGPA = semesterAttemptedCredits > 0 ? semesterPoints / semesterAttemptedCredits : 0;
     
+     // Update form fields
     if (document.getElementById('edit-total-credits')) {
         document.getElementById('edit-total-credits').value = Math.round(totalEarnedCredits);  // Changed from toFixed(2)
     }
