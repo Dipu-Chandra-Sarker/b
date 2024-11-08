@@ -591,13 +591,6 @@ select:invalid {
 
 /* Update your existing media query */
 @media (max-width: 767px) {
- #loaded-record p {
-        font-size: 0.85em;
-    }
-
-    #loaded-record .note {
-        font-size: 0.8em;
-    }
     .course-row {
         flex-direction: row;
         flex-wrap: wrap;
