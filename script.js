@@ -637,28 +637,28 @@ function showPDFPreview(pdfData) {
 function displayLoadedRecord(record) {
     const loadedRecordDiv = document.getElementById('loaded-record');
 
-    let html = `
+   let html = `
         <h3>Loaded ${record.type} Record</h3>
         <div class="edit-row">
             <div class="edit-field">
-                <p>File Name: ${record.fileName}</p>
-                <p>Date: ${record.date}</p>
+                <p><strong>File Name:</strong> ${record.fileName}</p>
+                <p><strong>Date:</strong> ${record.date}</p>
             </div>
             <div class="edit-field">
-                <p>Academic Year: ${record.academicYear}</p>
-                <p>Semester: ${record.semester || 'Not Selected'}</p>
+                <p><strong>Academic Year:</strong> ${record.academicYear}</p>
+                <p><strong>Semester:</strong> ${record.semester || 'Not Selected'}</p>
             </div>
         </div>
     `;
 
-    if (record.type === "CGPA") {
+  if (record.type === "CGPA") {
         html += `
             <div class="edit-row">
                 <div class="edit-field">
-                    <p>Current Credits: ${record.completedCredits}</p>
+                    <p><strong>Current Credits:</strong> ${record.completedCredits}</p>
                 </div>
                 <div class="edit-field">
-                    <p>Current CGPA: ${record.currentGPA}</p>
+                    <p><strong>Current CGPA:</strong> ${record.currentGPA}</p>
                 </div>
             </div>
         `;
@@ -696,12 +696,12 @@ function displayLoadedRecord(record) {
         <div class="edit-row">
             ${record.type === "CGPA" ? `
                 <div class="edit-field">
-                    <p>Semester Credits: ${record.semesterCredits}</p>
-                    <p><strong>Total Credits: ${record.totalCredits || record.semesterCredits}</strong></p>
+                    <p><strong>Semester Credits:</strong> ${record.semesterCredits}</p>
+                    <p><strong>Total Credits:</strong> ${record.totalCredits || record.semesterCredits}</p>
                 </div>
                 <div class="edit-field">
-                    <p>Semester GPA: ${record.semesterGPA}</p>
-                    <p><strong>Calculated ${record.type}: ${record.calculatedGPA || record.semesterGPA}</strong></p>
+                    <p><strong>Semester GPA:</strong> ${record.semesterGPA}</p>
+                    <p><strong>Calculated ${record.type}:</strong> ${record.calculatedGPA || record.semesterGPA}</p>
                 </div>
             ` : `
                 <div class="edit-field">
