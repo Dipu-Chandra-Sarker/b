@@ -146,13 +146,12 @@ function calculateCGPA() {
     const currentCGPA = document.getElementById('current-cgpa').value;
     const courses = document.querySelectorAll('#cgpa-courses .course-row');
 
-    // Validation checks
+    // Validation checks remain the same
     if (!academicYear) {
         showToast("Please select Academic Year");
         return;
     }
 
-    // CGPA validation
     if ((completedCredits && !currentCGPA) || (!completedCredits && currentCGPA)) {
         showToast("Please fill both Completed Credits and Current CGPA");
         return;
@@ -163,7 +162,6 @@ function calculateCGPA() {
         return;
     }
 
-    // Validate all courses have required fields
     let isValid = true;
     courses.forEach(course => {
         const credits = course.children[0].value;
@@ -178,7 +176,6 @@ function calculateCGPA() {
         return;
     }
 
-    // Show loading screen
     const splashScreen = document.createElement('div');
     splashScreen.className = 'splash-screen';
     splashScreen.innerHTML = `
@@ -191,91 +188,88 @@ function calculateCGPA() {
 
     setTimeout(() => {
         let newPoints = 0;
+        let displayCredits = 0;     
+        let calculationCredits = 0;  
         let semesterPoints = 0;
-        let semesterAttemptedCredits = 0;
-        let semesterEarnedCredits = 0;
-        let totalAttemptedCredits = 0;
-        let totalEarnedCredits = 0;
+        let semesterCredits = 0;
 
         const parsedCompletedCredits = parseFloat(completedCredits) || 0;
         const parsedCurrentCGPA = parseFloat(currentCGPA) || 0;
-
-        // Set initial totals from previous record
-        totalAttemptedCredits = parsedCompletedCredits;
-        totalEarnedCredits = parsedCompletedCredits;
-
+        
+        // For F grade retakes, assume the actual calculation credits are higher
+        let actualCalculationCredits = parsedCompletedCredits;
         courses.forEach(course => {
             const credits = parseFloat(course.children[0].value);
             const gradePoints = parseFloat(course.children[1].value);
             const isRetake = course.children[2]?.value === "1";
             const oldGradePoints = isRetake ? parseFloat(course.children[3].value) : 0;
 
-            // Add to semester totals
-            semesterPoints += gradePoints * credits;
-            semesterAttemptedCredits += credits;
-            if (gradePoints > 0) { // Not an F grade
-                semesterEarnedCredits += credits;
-            }
-
-            if (isRetake && (parsedCompletedCredits > 0 || parsedCurrentCGPA > 0)) {
-                // For retake courses
-                // Calculate grade point difference for GPA
-                newPoints += (gradePoints - oldGradePoints) * credits;
-                
-                // Update earned credits if passing previously failed course
-                if (oldGradePoints === 0 && gradePoints > 0) {
-                    // If old grade was F and new grade is passing
-                    totalEarnedCredits += credits;
-                }
-                // Attempted credits don't change for retakes
-            } else {
-                // For new courses
-                newPoints += gradePoints * credits;
-                totalAttemptedCredits += credits;  // Add to attempted
-                if (gradePoints > 0) {  // If passing grade
-                    totalEarnedCredits += credits;  // Add to earned
-                }
+            if (isRetake && oldGradePoints === 0.00) {
+                // If it's an F grade retake, adjust the actual calculation credits
+                actualCalculationCredits += credits;
             }
         });
 
-        // Calculate total points including previous CGPA
-        const totalPoints = (parsedCurrentCGPA * parsedCompletedCredits) + newPoints;
+        // Calculate initial points using actual calculation credits
+        const initialPoints = actualCalculationCredits * parsedCurrentCGPA;
+
+        // Process each course
+        courses.forEach(course => {
+            const credits = parseFloat(course.children[0].value);
+            const gradePoints = parseFloat(course.children[1].value);
+            const isRetake = course.children[2]?.value === "1";
+            const oldGradePoints = isRetake ? parseFloat(course.children[3].value) : 0;
+
+            if (isRetake) {
+                if (oldGradePoints === 0.00) {
+                    // Retaking an F grade
+                    newPoints += gradePoints * credits;
+                    if (gradePoints > 0) {
+                        displayCredits += credits;
+                    }
+                    // Don't add to calculationCredits as it's already included
+                } else {
+                    // Retaking a non-F grade
+                    newPoints += (gradePoints - oldGradePoints) * credits;
+                }
+            } else {
+                // New course
+                newPoints += gradePoints * credits;
+                if (gradePoints > 0) {
+                    displayCredits += credits;
+                }
+                calculationCredits += credits;
+            }
+            
+            // Always add to semester calculations
+            semesterPoints += gradePoints * credits;
+            semesterCredits += credits;
+        });
+
+        const totalPoints = initialPoints + newPoints;
+        const displayTotalCredits = parsedCompletedCredits + displayCredits;
+        const calculationTotalCredits = actualCalculationCredits + calculationCredits;
         
-        // Calculate final GPAs
-        const newCGPA = totalAttemptedCredits > 0 ? totalPoints / totalAttemptedCredits : 0;
-        const semesterGPA = semesterAttemptedCredits > 0 ? semesterPoints / semesterAttemptedCredits : 0;
+        const newCGPA = calculationTotalCredits > 0 ? totalPoints / calculationTotalCredits : 0;
+        const semesterGPA = semesterCredits > 0 ? semesterPoints / semesterCredits : 0;
 
-        // Remove splash screen
         document.body.removeChild(splashScreen);
-
-        // Show results with all calculated values
+        
         showCalculationResult(
-            academicYear, 
-            semester || 'Not Selected', 
+            academicYear,
+            semester || 'Not Selected',
             parsedCompletedCredits,
             parsedCurrentCGPA,
             newCGPA,
             semesterGPA,
-            semesterAttemptedCredits,
-            semesterEarnedCredits,
-            totalAttemptedCredits,
-            totalEarnedCredits
+            semesterCredits,
+            displayTotalCredits,
+            displayCredits
         );
     }, 1000);
 }
 
-function showCalculationResult(
-    academicYear, 
-    semester, 
-    completedCredits, 
-    currentCGPA, 
-    newCGPA, 
-    semesterGPA, 
-    semesterAttemptedCredits,
-    semesterEarnedCredits,
-    totalAttemptedCredits,
-    totalEarnedCredits
-) {
+function showCalculationResult(academicYear, semester, completedCredits, currentCGPA, newCGPA, semesterGPA, semesterCredits, totalCredits, newCredits) {
     const splashScreen = document.createElement('div');
     splashScreen.className = 'splash-screen';
     
@@ -287,18 +281,19 @@ function showCalculationResult(
                 <h3>GPA Calculation Result</h3>
                 
                 <div class="edit-row">
-                    <div class="edit-field text-left">
-                        <p><span class="result-label">Academic Year:</span> ${academicYear}</p>
-                        <p><span class="result-label">Semester:</span> ${semester}</p>
+                    <div class="edit-field">
+                        <p>Academic Year: ${academicYear}</p>
+                        <p>Semester: ${semester}</p>
                     </div>
                 </div>
 
                 <h3>Semester Result</h3>
                 <div class="edit-row">
-                    <div class="edit-field text-left">
-                        <p><span class="result-label">Attempted Credits:</span> ${Math.round(semesterAttemptedCredits)}</p>
-                        <p><span class="result-label">Completed Credits:</span> ${Math.round(semesterEarnedCredits)}</p>
-                        <p><span class="result-label">Semester GPA:</span> ${semesterGPA.toFixed(2)}</p>
+                    <div class="edit-field">
+                        <p>Semester Credits: ${Math.round(semesterCredits)}</p>
+                    </div>
+                    <div class="edit-field">
+                        <p>Semester GPA: ${semesterGPA.toFixed(2)}</p>
                     </div>
                 </div>
 
@@ -315,28 +310,36 @@ function showCalculationResult(
                 <h3>CGPA Calculation Result</h3>
                 
                 <div class="edit-row">
-                    <div class="edit-field text-left">
-                        <p><span class="result-label">Academic Year:</span> ${academicYear}</p>
-                        <p><span class="result-label">Semester:</span> ${semester}</p>
+                    <div class="edit-field">
+                        <p>Academic Year: ${academicYear}</p>
+                        <p>Semester: ${semester}</p>
                     </div>
                 </div>
 
                 <div class="edit-row">
-                    <div class="edit-field text-left">
-                        <p><span class="result-label">Previous Credits:</span> ${Math.round(completedCredits)}</p>
-                        <p><span class="result-label">Previous CGPA:</span> ${currentCGPA.toFixed(2)}</p>
-                        <p><span class="result-label">Total Attempted Credits:</span> ${Math.round(totalAttemptedCredits)}</p>
-                        <p><span class="result-label">Total Completed Credits:</span> ${Math.round(totalEarnedCredits)}</p>
-                        <p><span class="result-label">New CGPA:</span> ${newCGPA.toFixed(2)}</p>
+                    <div class="edit-field">
+                        <p>Previous Credits: ${Math.round(completedCredits)}</p>
+                        <p>Previous CGPA: ${currentCGPA.toFixed(2)}</p>
+                    </div>
+                    <div class="edit-field">
+                        <p>New Credits: ${Math.round(newCredits)}</p>
+                        <p>Total Credits: ${Math.round(totalCredits)}</p>
+                    </div>
+                </div>
+
+                <div class="edit-row">
+                    <div class="edit-field">
+                        <p>New CGPA: ${newCGPA.toFixed(2)}</p>
                     </div>
                 </div>
 
                 <h3>Semester Result</h3>
                 <div class="edit-row">
-                    <div class="edit-field text-left">
-                        <p><span class="result-label">Attempted Credits:</span> ${Math.round(semesterAttemptedCredits)}</p>
-                        <p><span class="result-label">Completed Credits:</span> ${Math.round(semesterEarnedCredits)}</p>
-                        <p><span class="result-label">Semester GPA:</span> ${semesterGPA.toFixed(2)}</p>
+                    <div class="edit-field">
+                        <p>Semester Credits: ${Math.round(semesterCredits)}</p>
+                    </div>
+                    <div class="edit-field">
+                        <p>Semester GPA: ${semesterGPA.toFixed(2)}</p>
                     </div>
                 </div>
 
@@ -508,66 +511,37 @@ function saveRecord(type) {
     const completedCredits = parseFloat(document.getElementById('completed-credits').value) || 0;
     const currentCGPA = parseFloat(document.getElementById('current-cgpa').value) || 0;
 
-    // Calculate credits and GPA for all courses
-    let newPoints = 0;
-    let semesterAttemptedCredits = 0;
-    let semesterEarnedCredits = 0;
-    let totalAttemptedCredits = completedCredits;
-    let totalEarnedCredits = completedCredits;
-
-    const courses = document.querySelectorAll('#cgpa-courses .course-row');
-    const courseData = Array.from(courses).map(course => {
-        const credits = parseFloat(course.children[0].value);
-        const gradePoints = parseFloat(course.children[1].value);
-        const grade = course.children[1].options[course.children[1].selectedIndex].text;
-        const isRetake = course.children[2]?.value === "1";
-        const oldGrade = isRetake ? course.children[3].options[course.children[3].selectedIndex].text : '-';
-
-        // Update credit totals
-        semesterAttemptedCredits += credits;
-        if (gradePoints > 0) { // Not an F grade
-            semesterEarnedCredits += credits;
-        }
-
-        if (!isRetake) {
-            totalAttemptedCredits += credits;
-            if (gradePoints > 0) {
-                totalEarnedCredits += credits;
-            }
-        }
-
-        newPoints += gradePoints * credits;
-
-        return {
-            credit: credits,
-            grade: grade,
-            isRetake: isRetake,
-            oldGrade: oldGrade
-        };
-    });
-
-    const semesterGPA = semesterAttemptedCredits > 0 ? 
-        (newPoints / semesterAttemptedCredits) : 0;
-
-    const record = {
+    let record = {
         type: type,
         fileName: fileName,
         date: new Date().toLocaleString(),
         academicYear: academicYear,
-        semester: semester || 'Not Selected',
+        semester: semester,
         completedCredits: completedCredits,
         currentGPA: currentCGPA,
-        semesterAttemptedCredits: semesterAttemptedCredits,
-        semesterEarnedCredits: semesterEarnedCredits,
-        totalAttemptedCredits: totalAttemptedCredits,
-        totalEarnedCredits: totalEarnedCredits,
-        semesterGPA: semesterGPA,
-        calculatedGPA: type === "CGPA" ? 
-            (totalAttemptedCredits > 0 ? 
-                ((currentCGPA * completedCredits) + newPoints) / totalAttemptedCredits : 0) : 
-            semesterGPA,
-        courses: courseData
+        courses: []
     };
+
+    const courses = document.querySelectorAll('#cgpa-courses .course-row');
+    courses.forEach(course => {
+        record.courses.push({
+            credit: course.children[0].value,
+            grade: course.children[1].options[course.children[1].selectedIndex].text,
+            isRetake: course.children[2]?.value === "1" || false,
+            oldGrade: course.children[2]?.value === "1" ? 
+                     course.children[3].options[course.children[3].selectedIndex].text : '-'
+        });
+    });
+
+    const resultDiv = document.querySelector('.splash-content');
+    if (type === "CGPA") {
+        record.calculatedGPA = parseFloat(resultDiv.textContent.match(/New CGPA: ([\d.]+)/)[1]);
+        record.newCredits = parseFloat(resultDiv.textContent.match(/New Credits: ([\d.]+)/)[1]);
+        record.totalCredits = parseFloat(resultDiv.textContent.match(/Total Credits: ([\d.]+)/)[1]);
+    }
+
+    record.semesterCredits = parseFloat(resultDiv.textContent.match(/Semester Credits: ([\d.]+)/)[1]);
+    record.semesterGPA = parseFloat(resultDiv.textContent.match(/Semester GPA: ([\d.]+)/)[1]);
 
     saveAsJSON(record, fileName);
     createPDF(record, fileName, true);
@@ -659,19 +633,20 @@ function showPDFPreview(pdfData) {
         }
     }
 }
+
 function displayLoadedRecord(record) {
     const loadedRecordDiv = document.getElementById('loaded-record');
 
     let html = `
-        <h3 style="margin-bottom: 5px;">Loaded ${record.type} Record</h3>
-        <div class="edit-row" style="margin-top: 5px;">
+        <h3>Loaded ${record.type} Record</h3>
+        <div class="edit-row">
             <div class="edit-field">
                 <p>File Name: ${record.fileName}</p>
                 <p>Date: ${record.date}</p>
             </div>
             <div class="edit-field">
                 <p>Academic Year: ${record.academicYear}</p>
-                <p>Semester: ${record.semester}</p>
+                <p>Semester: ${record.semester || 'Not Selected'}</p>
             </div>
         </div>
     `;
@@ -680,19 +655,16 @@ function displayLoadedRecord(record) {
         html += `
             <div class="edit-row">
                 <div class="edit-field">
-                    <p>Previous Credits: ${record.completedCredits}</p>
-                    <p>Previous CGPA: ${record.currentGPA}</p>
+                    <p>Current Credits: ${record.completedCredits}</p>
                 </div>
                 <div class="edit-field">
-                    <p>Total Completed Credits: ${record.totalEarnedCredits}</p>
-                    <p>New CGPA: ${record.calculatedGPA.toFixed(2)}</p>
+                    <p>Current CGPA: ${record.currentGPA}</p>
                 </div>
             </div>
         `;
     }
 
     html += `
-        <h3>Course Details</h3>
         <table class="record-table">
             <tr>
                 <th>Course</th>
@@ -721,18 +693,24 @@ function displayLoadedRecord(record) {
 
     html += `
         </table>
-        <p style="font-size: 0.9em; color: #666; margin-top: 8px;">
-            Note: Courses with F grade are included in attempted credits but not in earned/Completed Credits.
-        </p>
-        <h3 style="margin-bottom: 5px;">Semester Result</h3>
-        <div class="edit-row" style="margin-top: 5px;">
-            <div class="edit-field">
-                <p>Attempted Credits: ${record.semesterAttemptedCredits}</p>
-                <p>Completed Credits: ${record.semesterEarnedCredits}</p>
-            </div>
-            <div class="edit-field">
-                <p>Semester GPA: ${record.semesterGPA.toFixed(2)}</p>
-            </div>
+        <div class="edit-row">
+            ${record.type === "CGPA" ? `
+                <div class="edit-field">
+                    <p>Semester Credits: ${record.semesterCredits}</p>
+                    <p><strong>Total Credits: ${record.totalCredits || record.semesterCredits}</strong></p>
+                </div>
+                <div class="edit-field">
+                    <p>Semester GPA: ${record.semesterGPA}</p>
+                    <p><strong>Calculated ${record.type}: ${record.calculatedGPA || record.semesterGPA}</strong></p>
+                </div>
+            ` : `
+                <div class="edit-field">
+                    <p><strong>Semester Credits: ${record.semesterCredits}</strong></p>
+                </div>
+                <div class="edit-field">
+                    <p><strong>Semester GPA: ${record.semesterGPA}</strong></p>
+                </div>
+            `}
         </div>
     `;
 
@@ -801,11 +779,11 @@ function showEditForm() {
         <div class="edit-row">
             <div class="edit-field">
                 <label>Total Credits:</label>
-                <input type="number" id="edit-total-credits" value="${currentRecord.type === 'CGPA' ? currentRecord.totalEarnedCredits : currentRecord.semesterEarnedCredits}" step="0.5" readonly>
+                <input type="number" id="edit-total-credits" value="${currentRecord.totalCredits || currentRecord.semesterCredits}" step="0.5" readonly>
             </div>
             <div class="edit-field">
                 <label>New ${currentRecord.type}:</label>
-                <input type="number" id="edit-new-gpa" value="${currentRecord.calculatedGPA}" step="0.01" readonly>
+                <input type="number" id="edit-new-gpa" value="${currentRecord.calculatedGPA || currentRecord.semesterGPA}" step="0.01" readonly>
             </div>
         </div>
         <h3>Courses</h3>
@@ -928,67 +906,86 @@ function updateNewCGPA() {
     const completedCredits = parseFloat(document.getElementById('edit-completed-credits')?.value) || 0;
     const currentCGPA = parseFloat(document.getElementById('edit-current-gpa')?.value) || 0;
     
-    let totalPoints = completedCredits * currentCGPA;
-    let totalAttemptedCredits = completedCredits;
-    let totalEarnedCredits = completedCredits;
+    let newPoints = 0;
+    let displayCredits = 0;     
+    let calculationCredits = 0;  
     let semesterPoints = 0;
-    let semesterAttemptedCredits = 0;
-    let semesterEarnedCredits = 0;
+    let semesterCredits = 0;
 
+    // First pass: Calculate actual calculation credits including F grades
+    let actualCalculationCredits = completedCredits;
     editForm.querySelectorAll('.course-row').forEach(courseRow => {
         const credits = parseFloat(courseRow.children[0].value) || 0;
-        const gradePoints = parseFloat(courseRow.children[1].value) || 0;
-        
-        // Add to semester totals
-        semesterPoints += gradePoints * credits;
-        semesterAttemptedCredits += credits;
-        if (gradePoints > 0) {
-            semesterEarnedCredits += credits;
-        }
+        const isRetake = courseRow.children[2]?.value === "1";
+        const oldGradePoints = isRetake ? parseFloat(courseRow.children[3].value) || 0 : 0;
 
-        if (currentRecord.type === "CGPA" && courseRow.children[2] && courseRow.children[2].value === "1") {
-            // This is a retake course
-            const oldGradePoints = parseFloat(courseRow.children[3].value) || 0;
-            
-            // Calculate points for CGPA
-            // Add the difference between new and old grade points
-            totalPoints += (gradePoints - oldGradePoints) * credits;
-            
-            // Update earned credits if passing a previously failed course
-            if (oldGradePoints === 0 && gradePoints > 0) {
-                // If old grade was F and new grade is passing
-                totalEarnedCredits += credits;
-            }
-            // Attempted credits don't change for retakes
-        } else {
-            // This is a new course
-            totalPoints += gradePoints * credits;
-            totalAttemptedCredits += credits;
-            if (gradePoints > 0) {
-                totalEarnedCredits += credits;
-            }
+        if (isRetake && oldGradePoints === 0.00) {
+            // If it's an F grade retake, adjust the actual calculation credits
+            actualCalculationCredits += credits;
         }
     });
 
-    // Calculate semester GPA and CGPA
-    const newCGPA = totalAttemptedCredits > 0 ? totalPoints / totalAttemptedCredits : 0;
-    const semesterGPA = semesterAttemptedCredits > 0 ? semesterPoints / semesterAttemptedCredits : 0;
-    
-     // Update form fields
-    if (document.getElementById('edit-total-credits')) {
-        document.getElementById('edit-total-credits').value = Math.round(totalEarnedCredits);  // Changed from toFixed(2)
-    }
-    if (document.getElementById('edit-new-gpa')) {
-        document.getElementById('edit-new-gpa').value = newCGPA.toFixed(2);  // Keep CGPA with 2 decimal places
-    }
+    // Calculate initial points using actual calculation credits
+    const initialPoints = actualCalculationCredits * currentCGPA;
 
-    // Update current record with new calculations
-    currentRecord.semesterAttemptedCredits = semesterAttemptedCredits;
-    currentRecord.semesterEarnedCredits = semesterEarnedCredits;
-    currentRecord.semesterGPA = parseFloat(semesterGPA.toFixed(2));
-    currentRecord.totalAttemptedCredits = totalAttemptedCredits;
-    currentRecord.totalEarnedCredits = totalEarnedCredits;
-    currentRecord.calculatedGPA = parseFloat(newCGPA.toFixed(2));
+    // Second pass: Calculate new points and credits
+    editForm.querySelectorAll('.course-row').forEach(courseRow => {
+        const credits = parseFloat(courseRow.children[0].value) || 0;
+        const gradePoints = parseFloat(courseRow.children[1].value) || 0;
+        const isRetake = courseRow.children[2]?.value === "1";
+        const oldGradePoints = isRetake ? parseFloat(courseRow.children[3].value) || 0 : 0;
+
+        if (isRetake) {
+            if (oldGradePoints === 0.00) {
+                // Retaking an F grade
+                newPoints += gradePoints * credits;
+                if (gradePoints > 0) {
+                    displayCredits += credits;
+                }
+                // Don't add to calculationCredits as it's already included
+            } else {
+                // Retaking a non-F grade
+                newPoints += (gradePoints - oldGradePoints) * credits;
+            }
+        } else {
+            // New course
+            newPoints += gradePoints * credits;
+            if (gradePoints > 0) {
+                displayCredits += credits;
+            }
+            calculationCredits += credits;
+        }
+
+        // Always add to semester calculations
+        semesterPoints += gradePoints * credits;
+        semesterCredits += credits;
+    });
+
+    const totalPoints = initialPoints + newPoints;
+    const displayTotalCredits = completedCredits + displayCredits;
+    const calculationTotalCredits = actualCalculationCredits + calculationCredits;
+    
+    const newCGPA = calculationTotalCredits > 0 ? totalPoints / calculationTotalCredits : 0;
+    const semesterGPA = semesterCredits > 0 ? semesterPoints / semesterCredits : 0;
+
+    document.getElementById('edit-new-gpa').value = 
+        (currentRecord.type === "CGPA" ? newCGPA : semesterGPA).toFixed(2);
+    document.getElementById('edit-total-credits').value = 
+        (currentRecord.type === "CGPA" ? displayTotalCredits : semesterCredits).toFixed(2);
+
+    // Update current record with all values
+    if (currentRecord.type === "CGPA") {
+        currentRecord.calculatedGPA = parseFloat(newCGPA.toFixed(2));
+        currentRecord.totalCredits = displayTotalCredits;
+        currentRecord.newCredits = displayCredits;
+        currentRecord.semesterGPA = parseFloat(semesterGPA.toFixed(2));
+        currentRecord.semesterCredits = semesterCredits;
+        // Add actual calculation credits for reference
+        currentRecord.actualCalculationCredits = calculationTotalCredits;
+    } else {
+        currentRecord.semesterGPA = parseFloat(semesterGPA.toFixed(2));
+        currentRecord.semesterCredits = semesterCredits;
+    }
 }
 
 function validateEditForm() {
@@ -1010,7 +1007,9 @@ function validateEditForm() {
         if (!course.children[0].value || !course.children[1].value) {
             isValid = false;
         }
-        if (currentRecord.type === "CGPA" && course.children[2]?.value === "1" && !course.children[3].value) {
+        if (currentRecord.type === "CGPA" && 
+            course.children[2]?.value === "1" && 
+            !course.children[3].value) {
             isValid = false;
         }
     });
@@ -1022,30 +1021,31 @@ function validateEditForm() {
 
     return true;
 }
-
 function showEditedResult() {
     const splashScreen = document.createElement('div');
     splashScreen.className = 'splash-screen';
-
+    
     let content = '';
     if (currentRecord.type === "GPA") {
+        // GPA calculation result
         content = `
             <div class="splash-content calculation-result">
-                <h3>Updated GPA Calculation Result</h3>
+                <h3>GPA Calculation Result</h3>
                 
                 <div class="edit-row">
-                    <div class="edit-field text-left">
-                        <p><span class="result-label">Academic Year:</span> ${currentRecord.academicYear}</p>
-                        <p><span class="result-label">Semester:</span> ${currentRecord.semester}</p>
+                    <div class="edit-field">
+                        <p>Academic Year: ${currentRecord.academicYear}</p>
+                        <p>Semester: ${currentRecord.semester}</p>
                     </div>
                 </div>
 
                 <h3>Semester Result</h3>
                 <div class="edit-row">
-                    <div class="edit-field text-left">
-                        <p><span class="result-label">Attempted Credits:</span> ${currentRecord.semesterAttemptedCredits}</p>
-                        <p><span class="result-label">Completed Credits:</span> ${currentRecord.semesterEarnedCredits}</p>
-                        <p><span class="result-label">Semester GPA:</span> ${currentRecord.semesterGPA.toFixed(2)}</p>
+                    <div class="edit-field">
+                        <p>Semester Credits: ${Math.round(currentRecord.semesterCredits)}</p>
+                    </div>
+                    <div class="edit-field">
+                        <p>Semester GPA: ${currentRecord.semesterGPA.toFixed(2)}</p>
                     </div>
                 </div>
 
@@ -1057,33 +1057,42 @@ function showEditedResult() {
             </div>
         `;
     } else {
+        // CGPA calculation result
         content = `
             <div class="splash-content calculation-result">
-                <h3>Updated CGPA Calculation Result</h3>
+                <h3>CGPA Calculation Result</h3>
                 
                 <div class="edit-row">
-                    <div class="edit-field text-left">
-                        <p><span class="result-label">Academic Year:</span> ${currentRecord.academicYear}</p>
-                        <p><span class="result-label">Semester:</span> ${currentRecord.semester}</p>
+                    <div class="edit-field">
+                        <p>Academic Year: ${currentRecord.academicYear}</p>
+                        <p>Semester: ${currentRecord.semester}</p>
                     </div>
                 </div>
 
                 <div class="edit-row">
-                    <div class="edit-field text-left">
-                        <p><span class="result-label">Previous Credits:</span> ${currentRecord.completedCredits}</p>
-                        <p><span class="result-label">Previous CGPA:</span> ${currentRecord.currentGPA.toFixed(2)}</p>
-                        <p><span class="result-label">Total Attempted Credits:</span> ${currentRecord.totalAttemptedCredits}</p>
-                        <p><span class="result-label">Total Completed Credits:</span> ${currentRecord.totalEarnedCredits}</p>
-                        <p><span class="result-label">New CGPA:</span> ${currentRecord.calculatedGPA.toFixed(2)}</p>
+                    <div class="edit-field">
+                        <p>Previous Credits: ${Math.round(currentRecord.completedCredits)}</p>
+                        <p>Previous CGPA: ${currentRecord.currentGPA.toFixed(2)}</p>
+                    </div>
+                    <div class="edit-field">
+                        <p>New Credits: ${Math.round(currentRecord.newCredits)}</p>
+                        <p>Total Credits: ${Math.round(currentRecord.totalCredits)}</p>
+                    </div>
+                </div>
+
+                <div class="edit-row">
+                    <div class="edit-field">
+                        <p>New CGPA: ${currentRecord.calculatedGPA.toFixed(2)}</p>
                     </div>
                 </div>
 
                 <h3>Semester Result</h3>
                 <div class="edit-row">
-                    <div class="edit-field text-left">
-                        <p><span class="result-label">Attempted Credits:</span> ${currentRecord.semesterAttemptedCredits}</p>
-                        <p><span class="result-label">Completed Credits:</span> ${currentRecord.semesterEarnedCredits}</p>
-                        <p><span class="result-label">Semester GPA:</span> ${currentRecord.semesterGPA.toFixed(2)}</p>
+                    <div class="edit-field">
+                        <p>Semester Credits: ${Math.round(currentRecord.semesterCredits)}</p>
+                    </div>
+                    <div class="edit-field">
+                        <p>Semester GPA: ${currentRecord.semesterGPA.toFixed(2)}</p>
                     </div>
                 </div>
 
@@ -1099,6 +1108,7 @@ function showEditedResult() {
     splashScreen.innerHTML = content;
     document.body.appendChild(splashScreen);
 }
+
 // Add new function to handle returning to records view
 function closeSplashAndReturn() {
     closeSplashScreen();
@@ -1115,7 +1125,6 @@ function confirmAndSaveChanges() {
 }
 
 function saveEditedRecord() {
-    // Validate CGPA fields first if it's a CGPA record
     if (currentRecord.type === "CGPA") {
         const completedCredits = document.getElementById('edit-completed-credits').value;
         const currentCGPA = document.getElementById('edit-current-gpa').value;
@@ -1134,82 +1143,40 @@ function saveEditedRecord() {
         const semester = document.getElementById('edit-semester').value;
         currentRecord.semester = semester || 'Not Selected';
         
-        let newPoints = 0;
-        let semesterAttemptedCredits = 0;
-        let semesterEarnedCredits = 0;
-        let totalAttemptedCredits = 0;
-        let totalEarnedCredits = 0;
-
         if (currentRecord.type === "CGPA") {
             currentRecord.completedCredits = parseFloat(document.getElementById('edit-completed-credits').value) || 0;
             currentRecord.currentGPA = parseFloat(document.getElementById('edit-current-gpa').value) || 0;
-            totalAttemptedCredits = currentRecord.completedCredits;
-            totalEarnedCredits = currentRecord.completedCredits;
+            currentRecord.calculatedGPA = parseFloat(document.getElementById('edit-new-gpa').value);
+            currentRecord.totalCredits = parseFloat(document.getElementById('edit-total-credits').value);
         }
         
         currentRecord.courses = [];
+        let semesterPoints = 0;
+        let semesterCredits = 0;
+
         editForm.querySelectorAll('.course-row').forEach(courseRow => {
             const credits = parseFloat(courseRow.children[0].value);
-            const gradePoints = parseFloat(courseRow.children[1].value);
             const grade = courseRow.children[1].options[courseRow.children[1].selectedIndex].text;
-            const isRetake = currentRecord.type === "CGPA" && courseRow.children[2] ? 
-                            courseRow.children[2].value === "1" : false;
-            const oldGrade = isRetake ? 
-                            courseRow.children[3].options[courseRow.children[3].selectedIndex].text : '-';
-
-            // Add to semester totals
-            semesterAttemptedCredits += credits;
-            if (gradePoints > 0) {
-                semesterEarnedCredits += credits;
-            }
-
-            if (currentRecord.type === "CGPA") {
-                if (isRetake) {
-                    // For retake courses
-                    const oldGradePoints = parseFloat(courseRow.children[3].value) || 0;
-                    // Add the difference between new and old grade points
-                    newPoints += (gradePoints - oldGradePoints) * credits;
-                    
-                    // Update earned credits if passing a previously failed course
-                    if (oldGradePoints === 0 && gradePoints > 0) {
-                        totalEarnedCredits += credits;
-                    }
-                    // Don't change attempted credits for retakes
-                } else {
-                    // For new courses
-                    newPoints += gradePoints * credits;
-                    totalAttemptedCredits += credits;
-                    if (gradePoints > 0) {
-                        totalEarnedCredits += credits;
-                    }
-                }
-            } else {
-                newPoints += gradePoints * credits;
-            }
+            const gradePoints = parseFloat(courseRow.children[1].value);
+            
+            // Calculate semester results - including F grades
+            semesterPoints += gradePoints * credits;
+            semesterCredits += credits;
 
             currentRecord.courses.push({
-                credit: credits,
+                credit: courseRow.children[0].value,
                 grade: grade,
-                isRetake: isRetake,
-                oldGrade: oldGrade
+                isRetake: currentRecord.type === "CGPA" && courseRow.children[2] ? 
+                         courseRow.children[2].value === "1" : false,
+                oldGrade: currentRecord.type === "CGPA" && courseRow.children[2]?.value === "1" ? 
+                         courseRow.children[3].options[courseRow.children[3].selectedIndex].text : '-'
             });
         });
 
-        // Update record with new calculations
-        currentRecord.semesterAttemptedCredits = semesterAttemptedCredits;
-        currentRecord.semesterEarnedCredits = semesterEarnedCredits;
-        currentRecord.semesterGPA = semesterAttemptedCredits > 0 ? 
-            (newPoints / semesterAttemptedCredits) : 0;
-
-        if (currentRecord.type === "CGPA") {
-            currentRecord.totalAttemptedCredits = totalAttemptedCredits;
-            currentRecord.totalEarnedCredits = totalEarnedCredits;
-            const totalPoints = (currentRecord.currentGPA * currentRecord.completedCredits) + newPoints;
-            currentRecord.calculatedGPA = totalAttemptedCredits > 0 ? 
-                totalPoints / totalAttemptedCredits : 0;
-        } else {
-            currentRecord.calculatedGPA = currentRecord.semesterGPA;
-        }
+        // Update semester results
+        currentRecord.semesterGPA = semesterCredits > 0 ? 
+            parseFloat((semesterPoints / semesterCredits).toFixed(2)) : 0;
+        currentRecord.semesterCredits = semesterCredits;
 
         showEditedResult();
     }
@@ -1413,39 +1380,107 @@ function closeSplashScreen() {
     }
 }
 
-function saveAsJSON(record, fileName) {
-    const recordJson = JSON.stringify(record, null, 2);
-    
+// Add these helper functions first
+function saveJsonToDevice(content, fileName) {
+    // Check if running in Cordova/PhoneGap environment
     if (window.cordova) {
-        window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function (fs) {
-            fs.root.getFile(fileName + ".json", { create: true, exclusive: false }, function (fileEntry) {
-                fileEntry.createWriter(function (fileWriter) {
-                    fileWriter.write(recordJson);
-                    showToast("Record saved as JSON successfully!");
-                }, saveError);
-            }, saveError);
-        }, saveError);
+        window.resolveLocalFileSystemURL(cordova.file.externalDataDirectory, function(directoryEntry) {
+            directoryEntry.getFile(fileName, { create: true, exclusive: false }, function(fileEntry) {
+                fileEntry.createWriter(function(fileWriter) {
+                    fileWriter.onwriteend = function() {
+                        showToast(`File saved to: ${fileEntry.nativeURL}`);
+                    };
+                    fileWriter.onerror = function(error) {
+                        showToast('Error saving file: ' + error.toString());
+                    };
+                    
+                    // Create a blob and write it
+                    const blob = new Blob([content], { type: 'application/json' });
+                    fileWriter.write(blob);
+                });
+            }, function(error) {
+                showToast('Error creating file: ' + error.toString());
+            });
+        }, function(error) {
+            showToast('Error accessing filesystem: ' + error.toString());
+        });
+    } else if (navigator.userAgent.match(/(iPhone|iPod|iPad|Android)/i)) {
+        // For mobile browsers without Cordova
+        try {
+            // Create a temporary link and trigger download
+            const blob = new Blob([content], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            showToast('File download started');
+        } catch (e) {
+            showToast('Error saving file: ' + e.toString());
+        }
     } else {
-        const blob = new Blob([recordJson], {type: "application/json"});
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = `${fileName}.json`;
-        a.click();
-        showToast("Record saved as JSON successfully!");
+        // Desktop browsers
+        try {
+            const blob = new Blob([content], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            showToast('File saved successfully');
+        } catch (e) {
+            showToast('Error saving file: ' + e.toString());
+        }
     }
 }
 
-function saveError(error) {
-    console.error("Error saving file", error);
-    showToast("Error saving file. Please try again.");
+// Updated saveAsJSON function
+function saveAsJSON(record, fileName) {
+    try {
+        // Ensure fileName has .json extension
+        if (!fileName.endsWith('.json')) {
+            fileName += '.json';
+        }
+
+        // Convert record to JSON string with formatting
+        const recordJson = JSON.stringify(record, null, 2);
+
+        // Save based on platform
+        saveJsonToDevice(recordJson, fileName);
+    } catch (error) {
+        console.error('Error in saveAsJSON:', error);
+        showToast('Error saving JSON file: ' + error.toString());
+    }
 }
+
+// Add this function to check if device supports file saving
+function checkDeviceCapabilities() {
+    let capabilities = {
+        cordova: !!window.cordova,
+        fileSystem: !!window.requestFileSystem || !!window.webkitRequestFileSystem,
+        isMobile: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+    };
+    
+    console.log('Device capabilities:', capabilities);
+    return capabilities;
+}
+
+// Add this to your initialization code
+document.addEventListener('deviceready', function() {
+    checkDeviceCapabilities();
+}, false);
+
 function createPDF(record, fileName, download = false) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-
-    // Column positions
-    const cgpaStartX = 20;  // Left side for CGPA
-    const gpaStartX = 120;  // Right side for GPA/Semester results
 
     doc.setFontSize(16);
     doc.text(`${record.type} Record`, 105, 15, null, null, 'center');
@@ -1456,59 +1491,43 @@ function createPDF(record, fileName, download = false) {
     doc.text(`Semester: ${record.semester}`, 20, 45);
 
     if (record.type === "CGPA") {
-        // CGPA Results (Left Side)
+        const cgpaStartX = 20;
         doc.setFontSize(14);
         doc.text("CGPA Calculation Result", cgpaStartX, 60);
         doc.setFontSize(12);
         doc.text(`Previous Credits: ${record.completedCredits}`, cgpaStartX, 70);
         doc.text(`Previous CGPA: ${record.currentGPA}`, cgpaStartX, 80);
-        doc.text(`Total Attempted Credits: ${record.totalAttemptedCredits}`, cgpaStartX, 90);
-        doc.text(`Total Completed Credits: ${record.totalEarnedCredits}`, cgpaStartX, 100);
-        doc.text(`New CGPA: ${record.calculatedGPA.toFixed(2)}`, cgpaStartX, 110);
-
-        // GPA Results (Right Side)
-        doc.setFontSize(14);
-        doc.text("GPA Calculation Result", gpaStartX, 60);
-        doc.setFontSize(12);
-        doc.text(`Attempted Credits: ${record.semesterAttemptedCredits}`, gpaStartX, 70);
-        doc.text(`Completed Credits: ${record.semesterEarnedCredits}`, gpaStartX, 80);
-        doc.text(`Semester GPA: ${record.semesterGPA.toFixed(2)}`, gpaStartX, 90);
-    } else {
-        // Only GPA Results (Centered)
-        doc.setFontSize(14);
-        doc.text("GPA Calculation Result", 20, 60);
-        doc.setFontSize(12);
-        doc.text(`Attempted Credits: ${record.semesterAttemptedCredits}`, 20, 70);
-        doc.text(`Completed Credits: ${record.semesterEarnedCredits}`, 20, 80);
-        doc.text(`Semester GPA: ${record.semesterGPA.toFixed(2)}`, 20, 90);
+        doc.text(`New Credits: ${record.newCredits}`, cgpaStartX, 90);
+        doc.text(`Total Credits: ${record.totalCredits}`, cgpaStartX, 100);
+        doc.text(`New CGPA: ${record.calculatedGPA}`, cgpaStartX, 110);
     }
 
-    // Course Details Table
-    const tableStartY = record.type === "CGPA" ? 130 : 100;
+    const gpaStartX = record.type === "CGPA" ? 120 : 20;
+    const gpaStartY = record.type === "CGPA" ? 60 : 60;
     doc.setFontSize(14);
-    doc.text("Course Details", 105, tableStartY - 5, null, null, 'center');
+    doc.text("GPA Calculation Result", gpaStartX, gpaStartY);
+    doc.setFontSize(12);
+    doc.text(`Semester Credits: ${record.semesterCredits}`, gpaStartX, gpaStartY + 10);
+    doc.text(`Semester GPA: ${record.semesterGPA}`, gpaStartX, gpaStartY + 20);
 
-    const columns = ["Course", "Credit", "Grade"];
-    if (record.type === "CGPA") {
-        columns.push("Retake", "Old Grade");
-    }
+    let yPos = record.type === "CGPA" ? 130 : 90;
+    doc.setFontSize(14);
+    doc.text("Courses", 105, yPos, null, null, 'center');
+    yPos += 10;
 
-    const data = record.courses.map((course, index) => {
-        const rowData = [
-            (index + 1).toString(),
-            course.credit,
-            course.grade
-        ];
-        if (record.type === "CGPA") {
-            rowData.push(course.isRetake ? 'Yes' : 'No', course.oldGrade);
-        }
-        return rowData;
-    });
+    const columns = ["Course", "Credit", "Grade", "Retake", "Old Grade"];
+    const data = record.courses.map((course, index) => [
+        (index + 1).toString(),
+        course.credit,
+        course.grade,
+        course.isRetake ? 'Yes' : 'No',
+        course.oldGrade
+    ]);
 
     doc.autoTable({
         head: [columns],
         body: data,
-        startY: tableStartY,
+        startY: yPos,
         theme: 'grid',
         styles: {
             fontSize: 11,
@@ -1521,20 +1540,11 @@ function createPDF(record, fileName, download = false) {
         }
     });
 
-    // Add the F grade note
-    const finalY = doc.previousAutoTable.finalY + 10;
-    doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100);
-    doc.text("Note: Courses with F grade are included in attempted credits but not in earned/Completed Credits.", 20, finalY);
-    
-    // Reset text color
-    doc.setTextColor(0, 0, 0);
-
     if (download) {
         if (window.cordova) {
             window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function (fs) {
                 fs.root.getFile(fileName + ".pdf", { create: true, exclusive: false }, function (fileEntry) {
-                    fileEntry.createWriter(function (fileWriter) {
+                   fileEntry.createWriter(function (fileWriter) {
                         fileWriter.write(doc.output('blob'));
                         showToast("Record saved as PDF successfully!");
                     }, saveError);
@@ -1544,9 +1554,9 @@ function createPDF(record, fileName, download = false) {
             doc.save(`${fileName}.pdf`);
             showToast("Record saved as PDF successfully!");
         }
+    } else {
+        return doc.output('datauristring');
     }
-
-    return doc.output('datauristring');
 }
 
 // Function for validating year input
